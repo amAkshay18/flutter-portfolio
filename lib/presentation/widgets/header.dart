@@ -54,20 +54,26 @@ class Header extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            AppConstants.appName,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: textColor,
+          Flexible(
+            child: Text(
+              AppConstants.appName,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: textColor,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           if (MediaQuery.of(context).size.width >= 992) ...[
-            _buildDesktopNav(context, ref, textColor),
+            Expanded(
+              child: _buildDesktopNav(context, ref, textColor),
+            ),
             const SizedBox(width: 20),
             _buildThemeToggleButton(context, ref),
           ] else
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 _buildThemeToggleButton(context, ref),
                 const SizedBox(width: 10),
@@ -80,49 +86,67 @@ class Header extends ConsumerWidget {
   }
 
   Widget _buildDesktopNav(BuildContext context, WidgetRef ref, Color textColor) {
-    return Row(
-      children: [
-        _NavItem(
-          text: AppStrings.about,
-          onTap: () => _scrollToSection('about'),
-          textColor: textColor,
-        ),
-        const SizedBox(width: 50),
-        _NavItem(
-          text: AppStrings.projects,
-          onTap: () => _scrollToSection('project'),
-          textColor: textColor,
-        ),
-        const SizedBox(width: 50),
-        _NavItem(
-          text: AppStrings.certifications,
-          onTap: () => _scrollToSection('certifications'),
-          textColor: textColor,
-        ),
-        const SizedBox(width: 50),
-        _NavItem(
-          text: AppStrings.achievements,
-          onTap: () => _scrollToSection('achievements'),
-          textColor: textColor,
-        ),
-        const SizedBox(width: 50),
-        _NavItem(
-          text: AppStrings.contact,
-          onTap: () => _scrollToSection('contact'),
-          textColor: textColor,
-        ),
-        const SizedBox(width: 50),
-        _NavItem(
-          text: AppStrings.resume,
-          onTap: () async {
-            final uri = Uri.parse(AppConstants.resumeUrl);
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            }
-          },
-          textColor: Colors.red,
-        ),
-      ],
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Aggressively reduce spacing based on screen width to prevent overflow
+    double spacing;
+    if (screenWidth < 1100) {
+      spacing = 12.0;
+    } else if (screenWidth < 1200) {
+      spacing = 20.0;
+    } else if (screenWidth < 1400) {
+      spacing = 30.0;
+    } else {
+      spacing = 50.0;
+    }
+    
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerRight,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _NavItem(
+            text: AppStrings.about,
+            onTap: () => _scrollToSection('about'),
+            textColor: textColor,
+          ),
+          SizedBox(width: spacing),
+          _NavItem(
+            text: AppStrings.projects,
+            onTap: () => _scrollToSection('project'),
+            textColor: textColor,
+          ),
+          SizedBox(width: spacing),
+          _NavItem(
+            text: AppStrings.certifications,
+            onTap: () => _scrollToSection('certifications'),
+            textColor: textColor,
+          ),
+          SizedBox(width: spacing),
+          _NavItem(
+            text: AppStrings.achievements,
+            onTap: () => _scrollToSection('achievements'),
+            textColor: textColor,
+          ),
+          SizedBox(width: spacing),
+          _NavItem(
+            text: AppStrings.contact,
+            onTap: () => _scrollToSection('contact'),
+            textColor: textColor,
+          ),
+          SizedBox(width: spacing),
+          _NavItem(
+            text: AppStrings.resume,
+            onTap: () async {
+              final uri = Uri.parse(AppConstants.resumeUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            textColor: Colors.red,
+          ),
+        ],
+      ),
     );
   }
 

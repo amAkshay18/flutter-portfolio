@@ -9,6 +9,94 @@ import '../../../../core/theme/app_theme.dart';
 import '../../providers/portfolio_provider.dart';
 import '../../widgets/custom_button.dart';
 
+class _BuiltWithFlutter extends StatefulWidget {
+  const _BuiltWithFlutter();
+
+  @override
+  State<_BuiltWithFlutter> createState() => _BuiltWithFlutterState();
+}
+
+class _BuiltWithFlutterState extends State<_BuiltWithFlutter> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.6,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.98,
+      end: 1.02,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color ?? 
+                     (isDark ? AppTheme.textWhite : AppTheme.textBlack);
+    final flutterColor = isDark ? const Color(0xFF60A5FA) : const Color(0xFF2563EB);
+
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _fadeAnimation.value,
+          child: Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Built with ',
+                  style: TextStyle(
+                    fontSize: AppTheme.fontSize9,
+                    fontWeight: FontWeight.w400,
+                    color: textColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                Text(
+                  'Flutter',
+                  style: TextStyle(
+                    fontSize: AppTheme.fontSize9,
+                    fontWeight: FontWeight.w600,
+                    color: flutterColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class ContactSection extends ConsumerWidget {
   const ContactSection({super.key});
 
@@ -64,6 +152,8 @@ class ContactSection extends ConsumerWidget {
             ),
             const SizedBox(height: 60),
             _SocialLinks(),
+            const SizedBox(height: 40),
+            _BuiltWithFlutter(),
           ],
         ),
       ),
