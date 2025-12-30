@@ -97,6 +97,8 @@ class _ProjectsList extends StatelessWidget {
                 margin: EdgeInsets.only(
                   right: index < projects.length - 1 ? 40 : 0,
                 ),
+                padding: const EdgeInsets.all(8), // Padding to accommodate scale transformation
+                clipBehavior: Clip.none, // Allow overflow for hover effects
                 child: _ProjectCard(project: projects[index]),
               );
             },
@@ -107,26 +109,56 @@ class _ProjectsList extends StatelessWidget {
   }
 }
 
-class _ProjectCard extends StatelessWidget {
+class _ProjectCard extends StatefulWidget {
   final Project project;
 
   const _ProjectCard({required this.project});
 
   @override
+  State<_ProjectCard> createState() => _ProjectCardState();
+}
+
+class _ProjectCardState extends State<_ProjectCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgWhite,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark 
-              ? AppTheme.borderEerieBlack.withOpacity(0.3)
-              : AppTheme.borderGainsboro,
-          width: 1,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Transform.scale(
+        scale: _isHovered ? 1.02 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+          color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgWhite,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: _isHovered
+                ? (isDark 
+                    ? AppTheme.borderEerieBlack.withOpacity(0.6)
+                    : AppTheme.borderGainsboro.withOpacity(0.8))
+                : (isDark 
+                    ? AppTheme.borderEerieBlack.withOpacity(0.3)
+                    : AppTheme.borderGainsboro),
+            width: 1,
+          ),
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: isDark 
+                        ? Colors.black.withOpacity(0.4)
+                        : Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 0,
+                  ),
+                ]
+              : [],
         ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -135,7 +167,7 @@ class _ProjectCard extends StatelessWidget {
             flex: 5,
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              child: _ProjectImage(project: project),
+              child: _ProjectImage(project: widget.project),
             ),
           ),
           // Project Info
@@ -155,7 +187,7 @@ class _ProjectCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              project.title,
+                              widget.project.title,
                               style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                 height: 1.2,
                                 fontWeight: FontWeight.w600,
@@ -165,7 +197,7 @@ class _ProjectCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             SizedBox(height: constraints.maxWidth < 400 ? 12 : 16),
-                            _ProjectLinks(project: project),
+                            _ProjectLinks(project: widget.project),
                           ],
                         ),
                       ),
@@ -176,6 +208,8 @@ class _ProjectCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -258,17 +292,32 @@ class _LinkButtonState extends State<_LinkButton> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           constraints: const BoxConstraints(minHeight: 40),
+          transform: Matrix4.identity()..scale(_isHovered ? 1.05 : 1.0),
           decoration: BoxDecoration(
-            color: bgColor,
+            color: _isHovered 
+                ? (widget.isDark 
+                    ? AppTheme.bgRichBlackFogra29.withOpacity(0.7)
+                    : AppTheme.bgLightGray.withOpacity(0.7))
+                : bgColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: _isHovered 
-                  ? widget.color.withOpacity(0.5)
+                  ? widget.color.withOpacity(0.6)
                   : Colors.transparent,
-              width: 1,
+              width: _isHovered ? 1.5 : 1,
             ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: widget.color.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

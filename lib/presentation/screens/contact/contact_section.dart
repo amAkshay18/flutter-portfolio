@@ -197,9 +197,9 @@ class _SocialLinks extends StatelessWidget {
               brandColor: const Color(0xFFE4405F), // Instagram pink/red
             ),
             _SocialLink(
-              icon: FontAwesomeIcons.twitter,
+              icon: FontAwesomeIcons.xTwitter,
               url: AppConstants.twitterUrl,
-              brandColor: const Color(0xFF1DA1F2), // Twitter blue
+              brandColor: const Color(0xFF000000), // X (formerly Twitter) black
             ),
             _SocialLink(
               icon: FontAwesomeIcons.envelope,
@@ -258,17 +258,28 @@ class _SocialLinkState extends State<_SocialLink> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           padding: const EdgeInsets.all(16),
+          transform: Matrix4.identity()..scale(_isHovered ? 1.1 : 1.0),
           decoration: BoxDecoration(
             color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgLightGray,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: widget.brandColor.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: Icon(
             widget.icon,

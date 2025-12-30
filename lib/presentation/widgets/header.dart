@@ -155,7 +155,7 @@ class Header extends ConsumerWidget {
     final backgroundColor = isDarkMode ? AppTheme.bgEerieBlack : AppTheme.bgLightGray;
     final iconColor = isDarkMode ? AppTheme.textWhite : AppTheme.textBlack;
 
-    return GestureDetector(
+    return _HoverableButton(
       onTap: () => ref.read(themeProvider.notifier).toggleTheme(),
       child: Container(
         width: 50,
@@ -178,7 +178,7 @@ class Header extends ConsumerWidget {
     final backgroundColor = isDarkMode ? AppTheme.bgSmokyBlack : AppTheme.bgLightGray;
     final iconColor = isDarkMode ? AppTheme.bgBlack : AppTheme.textBlack;
 
-    return GestureDetector(
+    return _HoverableButton(
       onTap: () => ref.read(navigationProvider.notifier).toggleMenu(),
       child: Container(
         width: 50,
@@ -208,7 +208,7 @@ class Header extends ConsumerWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem extends StatefulWidget {
   final String text;
   final VoidCallback onTap;
   final Color? textColor;
@@ -220,23 +220,96 @@ class _NavItem extends StatelessWidget {
   });
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final defaultTextColor = widget.textColor ?? Theme.of(context).textTheme.bodyLarge?.color ?? 
+                            (isDark ? AppTheme.textWhite : AppTheme.textBlack);
+    final hoverBgColor = isDark 
+        ? AppTheme.bgEerieBlack.withOpacity(0.3)
+        : AppTheme.bgLightGray.withOpacity(0.5);
+    
     return MouseRegion(
       cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
       child: GestureDetector(
-        onTap: onTap,
+        onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            text,
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isHovered ? hoverBgColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
             style: TextStyle(
-              color: textColor ?? Theme.of(context).textTheme.bodyLarge?.color,
+              color: defaultTextColor,
               fontSize: AppTheme.fontSize8,
-              fontWeight: FontWeight.w500,
+              fontWeight: _isHovered ? FontWeight.w600 : FontWeight.w500,
               letterSpacing: 0.5,
             ),
+            child: Text(widget.text),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverableButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _HoverableButton({
+    required this.child,
+    required this.onTap,
+  });
+
+  @override
+  State<_HoverableButton> createState() => _HoverableButtonState();
+}
+
+class _HoverableButtonState extends State<_HoverableButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          transform: Matrix4.identity()..scale(_isHovered ? 1.05 : 1.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: isDark 
+                          ? Colors.white.withOpacity(0.1)
+                          : Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
+          ),
+          child: widget.child,
         ),
       ),
     );

@@ -78,6 +78,8 @@ class _AchievementsList extends StatelessWidget {
                 margin: EdgeInsets.only(
                   right: index < achievements.length - 1 ? 40 : 0,
                 ),
+                padding: const EdgeInsets.all(8), // Padding to accommodate scale transformation
+                clipBehavior: Clip.none, // Allow overflow for hover effects
                 child: _AchievementCard(achievement: achievements[index]),
               );
             },
@@ -88,26 +90,56 @@ class _AchievementsList extends StatelessWidget {
   }
 }
 
-class _AchievementCard extends StatelessWidget {
+class _AchievementCard extends StatefulWidget {
   final _AchievementItem achievement;
 
   const _AchievementCard({required this.achievement});
 
   @override
+  State<_AchievementCard> createState() => _AchievementCardState();
+}
+
+class _AchievementCardState extends State<_AchievementCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgWhite,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark 
-              ? AppTheme.borderEerieBlack.withOpacity(0.3)
-              : AppTheme.borderGainsboro,
-          width: 1,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Transform.scale(
+        scale: _isHovered ? 1.02 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+          color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgWhite,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: _isHovered
+                ? (isDark 
+                    ? AppTheme.borderEerieBlack.withOpacity(0.6)
+                    : AppTheme.borderGainsboro.withOpacity(0.8))
+                : (isDark 
+                    ? AppTheme.borderEerieBlack.withOpacity(0.3)
+                    : AppTheme.borderGainsboro),
+            width: 1,
+          ),
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: isDark 
+                        ? Colors.black.withOpacity(0.4)
+                        : Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 0,
+                  ),
+                ]
+              : [],
         ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -116,7 +148,7 @@ class _AchievementCard extends StatelessWidget {
             flex: 5,
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              child: _AchievementImage(achievement: achievement),
+              child: _AchievementImage(achievement: widget.achievement),
             ),
           ),
           // Achievement Info
@@ -136,7 +168,7 @@ class _AchievementCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              achievement.title,
+                              widget.achievement.title,
                               style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                 height: 1.2,
                                 fontWeight: FontWeight.w600,
@@ -147,7 +179,7 @@ class _AchievementCard extends StatelessWidget {
                             ),
                             SizedBox(height: constraints.maxWidth < 400 ? 8 : 12),
                             Text(
-                              achievement.description,
+                              widget.achievement.description,
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 color: isDark ? AppTheme.textLightGray : AppTheme.textSmokyBlack,
                                 fontSize: constraints.maxWidth < 400 ? 12 : AppTheme.fontSize10,
@@ -156,7 +188,7 @@ class _AchievementCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             SizedBox(height: constraints.maxWidth < 400 ? 12 : 16),
-                            _AchievementLink(url: achievement.linkUrl, isDark: isDark),
+                            _AchievementLink(url: widget.achievement.linkUrl, isDark: isDark),
                           ],
                         ),
                       ),
@@ -167,6 +199,8 @@ class _AchievementCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -253,17 +287,32 @@ class _AchievementLinkState extends State<_AchievementLink> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           constraints: const BoxConstraints(minHeight: 40),
+          transform: Matrix4.identity()..scale(_isHovered ? 1.05 : 1.0),
           decoration: BoxDecoration(
-            color: bgColor,
+            color: _isHovered 
+                ? (widget.isDark 
+                    ? AppTheme.bgRichBlackFogra29.withOpacity(0.7)
+                    : AppTheme.bgLightGray.withOpacity(0.7))
+                : bgColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: _isHovered 
-                  ? textColor.withOpacity(0.5)
+                  ? textColor.withOpacity(0.6)
                   : Colors.transparent,
-              width: 1,
+              width: _isHovered ? 1.5 : 1,
             ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: textColor.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

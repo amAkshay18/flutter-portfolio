@@ -139,7 +139,7 @@ class MobileMenu extends ConsumerWidget {
   }
 }
 
-class _MenuItem extends StatelessWidget {
+class _MenuItem extends StatefulWidget {
   final String text;
   final VoidCallback onTap;
   final Color? textColor;
@@ -151,22 +151,47 @@ class _MenuItem extends StatelessWidget {
   });
 
   @override
+  State<_MenuItem> createState() => _MenuItemState();
+}
+
+class _MenuItemState extends State<_MenuItem> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final defaultTextColor = textColor ?? 
+    final defaultTextColor = widget.textColor ?? 
                             (Theme.of(context).textTheme.bodyLarge?.color ?? 
                              (isDark ? AppTheme.textLightGray : AppTheme.textSmokyBlack));
+    final hoverBgColor = isDark 
+        ? AppTheme.bgEerieBlack.withOpacity(0.3)
+        : AppTheme.bgLightGray.withOpacity(0.5);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Text(
-          text,
-          style: TextStyle(
-            color: defaultTextColor,
-            fontSize: AppTheme.fontSize8,
-            fontWeight: FontWeight.w500,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: _isHovered ? hoverBgColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                color: defaultTextColor,
+                fontSize: AppTheme.fontSize8,
+                fontWeight: _isHovered ? FontWeight.w600 : FontWeight.w500,
+              ),
+              child: Text(widget.text),
+            ),
           ),
         ),
       ),

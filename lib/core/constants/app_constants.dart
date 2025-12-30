@@ -15,7 +15,7 @@ class AppConstants {
   static const String githubUrl = 'https://github.com/amAkshay18';
   static const String leetcodeUrl = 'https://leetcode.com/u/imAkshayp/';
   static const String instagramUrl = 'https://www.instagram.com/';
-  static const String twitterUrl = 'https://twitter.com/';
+  static const String twitterUrl = 'https://x.com/'; // X (formerly Twitter)
   
   // Map Location
   static const double mapLatitude = 10.904678489252005;

@@ -12,13 +12,13 @@ class CertificationsSection extends StatelessWidget {
       _CertificationItem(
         title: 'Udemy Certificate 1',
         imageUrl: null, // Will be set when certificate image is added
-        linkUrl: 'https://www.udemy.com/', // Replace with actual certificate URL
+        linkUrl: 'https://drive.google.com/file/d/1MBHXiD2q2Q6FVUc6bA4X8z2J-XIvK9B1/view?usp=sharing',
         description: 'Flutter Development Course Completion',
       ),
       _CertificationItem(
         title: 'Udemy Certificate 2',
         imageUrl: null, // Will be set when certificate image is added
-        linkUrl: 'https://www.udemy.com/', // Replace with actual certificate URL
+        linkUrl: 'https://drive.google.com/file/d/1ATpjn9z8rrFvHwpzxXU28Q9aTy5c04UO/view?usp=sharing',
         description: 'Advanced Flutter & Dart Programming',
       ),
       _CertificationItem(
@@ -120,10 +120,12 @@ class _CertificationsList extends StatelessWidget {
         final cardWidth = constraints.maxWidth >= 768 ? 450.0 : constraints.maxWidth * 0.85;
         final cardHeight = constraints.maxWidth >= 768 ? 600.0 : 550.0;
         
-        return SizedBox(
+        return Container(
           height: cardHeight,
+          clipBehavior: Clip.none,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
             itemCount: certifications.length,
             itemBuilder: (context, index) {
               return Container(
@@ -131,6 +133,8 @@ class _CertificationsList extends StatelessWidget {
                 margin: EdgeInsets.only(
                   right: index < certifications.length - 1 ? 40 : 0,
                 ),
+                padding: const EdgeInsets.all(8), // Padding to accommodate scale transformation
+                clipBehavior: Clip.none, // Allow overflow for hover effects
                 child: _CertificationCard(certification: certifications[index]),
               );
             },
@@ -141,26 +145,56 @@ class _CertificationsList extends StatelessWidget {
   }
 }
 
-class _CertificationCard extends StatelessWidget {
+class _CertificationCard extends StatefulWidget {
   final _CertificationItem certification;
 
   const _CertificationCard({required this.certification});
 
   @override
+  State<_CertificationCard> createState() => _CertificationCardState();
+}
+
+class _CertificationCardState extends State<_CertificationCard> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgWhite,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark 
-              ? AppTheme.borderEerieBlack.withOpacity(0.3)
-              : AppTheme.borderGainsboro,
-          width: 1,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Transform.scale(
+        scale: _isHovered ? 1.02 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+          color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgWhite,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: _isHovered
+                ? (isDark 
+                    ? AppTheme.borderEerieBlack.withOpacity(0.6)
+                    : AppTheme.borderGainsboro.withOpacity(0.8))
+                : (isDark 
+                    ? AppTheme.borderEerieBlack.withOpacity(0.3)
+                    : AppTheme.borderGainsboro),
+            width: 1,
+          ),
+          boxShadow: _isHovered
+              ? [
+                  BoxShadow(
+                    color: isDark 
+                        ? Colors.black.withOpacity(0.4)
+                        : Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 0,
+                  ),
+                ]
+              : [],
         ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -169,7 +203,7 @@ class _CertificationCard extends StatelessWidget {
             flex: 5,
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              child: _CertificationImage(certification: certification),
+              child: _CertificationImage(certification: widget.certification),
             ),
           ),
           // Certification Info
@@ -189,7 +223,7 @@ class _CertificationCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              certification.title,
+                              widget.certification.title,
                               style: Theme.of(context).textTheme.displaySmall?.copyWith(
                                 height: 1.2,
                                 fontWeight: FontWeight.w600,
@@ -200,7 +234,7 @@ class _CertificationCard extends StatelessWidget {
                             ),
                             SizedBox(height: constraints.maxWidth < 400 ? 8 : 12),
                             Text(
-                              certification.description,
+                              widget.certification.description,
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 color: isDark ? AppTheme.textLightGray : AppTheme.textSmokyBlack,
                                 fontSize: constraints.maxWidth < 400 ? 12 : AppTheme.fontSize10,
@@ -208,9 +242,9 @@ class _CertificationCard extends StatelessWidget {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            if (certification.linkUrl != null) ...[
+                            if (widget.certification.linkUrl != null) ...[
                               SizedBox(height: constraints.maxWidth < 400 ? 12 : 16),
-                              _CertificationLink(url: certification.linkUrl!, isDark: isDark),
+                              _CertificationLink(url: widget.certification.linkUrl!, isDark: isDark),
                             ],
                           ],
                         ),
@@ -222,6 +256,8 @@ class _CertificationCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+        ),
       ),
     );
   }
@@ -308,17 +344,32 @@ class _CertificationLinkState extends State<_CertificationLink> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           constraints: const BoxConstraints(minHeight: 40),
+          transform: Matrix4.identity()..scale(_isHovered ? 1.05 : 1.0),
           decoration: BoxDecoration(
-            color: bgColor,
+            color: _isHovered 
+                ? (widget.isDark 
+                    ? AppTheme.bgRichBlackFogra29.withOpacity(0.7)
+                    : AppTheme.bgLightGray.withOpacity(0.7))
+                : bgColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: _isHovered 
-                  ? textColor.withOpacity(0.5)
+                  ? textColor.withOpacity(0.6)
                   : Colors.transparent,
-              width: 1,
+              width: _isHovered ? 1.5 : 1,
             ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: textColor.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
