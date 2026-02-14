@@ -20,6 +20,9 @@ dependencies:
   cached_network_image: ^3.3.0
   url_launcher: ^6.2.2
   google_maps_flutter: ^2.5.3
+  flutter_bloc: ^9.1.1
+  bloc: ^9.0.0
+  freezed_annotation: ^2.4.4
   
   # Form & Validation
   email_validator: ^2.1.17
@@ -48,6 +51,7 @@ dev_dependencies:
   build_runner: ^2.4.7
   riverpod_generator: ^2.3.9
   json_serializable: ^6.7.1
+  freezed: ^2.5.7
 
 flutter:
   uses-material-design: true
@@ -55,6 +59,7 @@ flutter:
   assets:
     - assets/images/
     - assets/fonts/
+    - assets/industry projects/
   
   fonts:
     - family: Recoleta

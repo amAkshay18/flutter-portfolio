@@ -236,13 +236,32 @@ Flutter Web supports all modern browsers:
 
 ## Deployment
 
-After building with `flutter build web`, you can deploy the `build/web` directory to any static hosting service:
+### GitHub Pages (Recommended - Free & Automatic)
 
-1. **GitHub Pages**: Push to gh-pages branch
-2. **Firebase Hosting**: `firebase deploy`
-3. **Netlify**: Drag and drop `build/web` folder
-4. **Vercel**: Connect GitHub repo or upload folder
-5. **AWS S3 + CloudFront**: Upload to S3 bucket and configure CloudFront
+This project includes automated deployment to GitHub Pages via GitHub Actions. 
+
+**Quick Start:**
+1. Enable GitHub Pages in your repository settings (Settings → Pages → Source: GitHub Actions)
+2. Push your code to the `main` branch
+3. The site will automatically deploy to: `https://<your-username>.github.io/portfolio_flutter/`
+4. **Updates are automatic**: Every push triggers a new deployment (2-5 minutes)
+
+**📖 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)**
+
+**Benefits:**
+- ✅ **Free hosting** - No cost
+- ✅ **Automatic deployments** - Updates go live within minutes of pushing code
+- ✅ **Easy sharing** - One link to share with recruiters
+- ✅ **No manual steps** - GitHub Actions handles everything
+
+### Other Hosting Options
+
+After building with `flutter build web`, you can also deploy the `build/web` directory to:
+
+- **Firebase Hosting**: `firebase deploy`
+- **Netlify**: Drag and drop `build/web` folder or connect GitHub repo
+- **Vercel**: Connect GitHub repo or upload folder
+- **AWS S3 + CloudFront**: Upload to S3 bucket and configure CloudFront
 
 ## Assets
 

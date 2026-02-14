@@ -1,47 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../providers/portfolio_provider.dart';
 import '../../../../domain/entities/project.dart';
+import '../../../data/datasources/portfolio_local_data_source.dart';
+import '../../../data/datasources/portfolio_remote_data_source.dart';
+import '../../../data/repositories/portfolio_repository_impl.dart';
+import '../../../domain/usecases/get_projects_usecase.dart';
+import '../../bloc/projects/projects_bloc.dart';
 
-class ProjectsSection extends ConsumerWidget {
+class ProjectsSection extends StatelessWidget {
   const ProjectsSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final projectsAsync = ref.watch(projectsProvider);
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => ProjectsBloc(
+        getProjectsUseCase: GetProjectsUseCase(
+          PortfolioRepositoryImpl(
+            localDataSource: PortfolioLocalDataSource(),
+            remoteDataSource: PortfolioRemoteDataSource(),
+          ),
+        ),
+      )..add(const ProjectsEvent.fetchRequested()),
+      child: const _ProjectsContent(),
+    );
+  }
+}
 
-    return projectsAsync.when(
-      data: (projects) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Industry Projects
-          _ProjectCategory(
-            title: 'Industry Projects',
-            projects: projects,
+class _ProjectsContent extends StatelessWidget {
+  const _ProjectsContent();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProjectsBloc, ProjectsState>(
+      builder: (context, state) {
+        return state.when(
+          initial: () => const SizedBox.shrink(),
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 70),
+              child: CircularProgressIndicator(),
+            ),
           ),
-          const SizedBox(height: 100),
-          // Personal Projects
-          _ProjectCategory(
-            title: 'Personal Projects',
-            projects: projects,
+          success: (projects) {
+        final industryProjects = projects
+            .where((project) => project.id.startsWith('industry_'))
+            .toList();
+        final personalProjects = projects
+            .where((project) => project.id.startsWith('personal_'))
+            .toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Industry Projects
+            _ProjectCategory(
+              title: 'Industry Projects',
+              projects: industryProjects,
+            ),
+            const SizedBox(height: 100),
+            // Personal Projects
+            _ProjectCategory(
+              title: 'Personal Projects',
+              projects: personalProjects,
+            ),
+          ],
+        );
+          },
+          failure: (message) => Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 70),
+              child: Text(message),
+            ),
           ),
-        ],
-      ),
-      loading: () => const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 70),
-          child: CircularProgressIndicator(),
-        ),
-      ),
-      error: (_, __) => const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 70),
-          child: Text('Error loading projects'),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -121,6 +155,16 @@ class _ProjectCard extends StatefulWidget {
 class _ProjectCardState extends State<_ProjectCard> {
   bool _isHovered = false;
 
+  Future<void> _openProjectLink() async {
+    final link = widget.project.appStoreLink ?? widget.project.githubLink;
+    if (link == null) return;
+
+    final uri = Uri.parse(link);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -128,87 +172,91 @@ class _ProjectCardState extends State<_ProjectCard> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      child: Transform.scale(
-        scale: _isHovered ? 1.02 : 1.0,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-          color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgWhite,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: _isHovered
-                ? (isDark 
-                    ? AppTheme.borderEerieBlack.withOpacity(0.6)
-                    : AppTheme.borderGainsboro.withOpacity(0.8))
-                : (isDark 
-                    ? AppTheme.borderEerieBlack.withOpacity(0.3)
-                    : AppTheme.borderGainsboro),
-            width: 1,
-          ),
-          boxShadow: _isHovered
-              ? [
-                  BoxShadow(
-                    color: isDark 
-                        ? Colors.black.withOpacity(0.4)
-                        : Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                    spreadRadius: 0,
-                  ),
-                ]
-              : [],
-        ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Project Image
-          Expanded(
-            flex: 5,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              child: _ProjectImage(project: widget.project),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: _openProjectLink,
+        child: Transform.scale(
+          scale: _isHovered ? 1.02 : 1.0,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            decoration: BoxDecoration(
+            color: isDark ? AppTheme.bgEerieBlack : AppTheme.bgWhite,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: _isHovered
+                  ? (isDark 
+                      ? AppTheme.borderEerieBlack.withOpacity(0.6)
+                      : AppTheme.borderGainsboro.withOpacity(0.8))
+                  : (isDark 
+                      ? AppTheme.borderEerieBlack.withOpacity(0.3)
+                      : AppTheme.borderGainsboro),
+              width: 1,
             ),
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: isDark 
+                          ? Colors.black.withOpacity(0.4)
+                          : Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                      spreadRadius: 0,
+                    ),
+                  ]
+                : [],
           ),
-          // Project Info
-          Expanded(
-            flex: 4,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final padding = constraints.maxWidth < 400 ? 16.0 : 32.0;
-                return Padding(
-                  padding: EdgeInsets.all(padding),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.project.title,
-                              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                                height: 1.2,
-                                fontWeight: FontWeight.w600,
-                                fontSize: constraints.maxWidth < 400 ? 20 : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Project Image
+            Expanded(
+              flex: 5,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                child: _ProjectImage(project: widget.project),
+              ),
+            ),
+            // Project Info
+            Expanded(
+              flex: 4,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final padding = constraints.maxWidth < 400 ? 16.0 : 32.0;
+                  return Padding(
+                    padding: EdgeInsets.all(padding),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.project.title,
+                                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                                  height: 1.2,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: constraints.maxWidth < 400 ? 20 : null,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: constraints.maxWidth < 400 ? 12 : 16),
-                            _ProjectLinks(project: widget.project),
-                          ],
+                              SizedBox(height: constraints.maxWidth < 400 ? 12 : 16),
+                              _ProjectLinks(project: widget.project),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
+          ],
+        ),
           ),
-        ],
-      ),
         ),
       ),
     );
